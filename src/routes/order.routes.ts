@@ -1,13 +1,13 @@
 import express from "express";
 import { z } from "zod";
-import { validateRequest } from "../utils/validateRequest";
+import { validateBodyZod } from "../utils/validateRequest";
 import { CreateOrderSchema, OrderSchema } from "../schemas/order.schema";
 
 export const OrderRouter = express.Router();
 
 OrderRouter.post(
   "/orders",
-  validateRequest({ body: CreateOrderSchema }),
+  validateBodyZod(CreateOrderSchema),
   (req, res) => {
     const newOrder = { id: "ord_123", ...req.body, createdAt: new Date().toISOString() };
     res.json(newOrder);
@@ -16,7 +16,7 @@ OrderRouter.post(
 
 OrderRouter.get(
   "/orders/:id",
-  validateRequest({ params: z.object({ id: z.string() }) }),
+    validateBodyZod(z.object({ id: z.string() })),
   (req, res) => {
     res.json({
       id: req.params.id,
