@@ -11,6 +11,7 @@ export interface AuthUser {
   firstName?: string;
   lastName?: string;
   isEmailVerified: boolean;
+  emailVerificationToken?: string;
 }
 
 export interface AuthTokens {
@@ -358,6 +359,29 @@ export class AuthService {
       firstName: user.firstName || undefined,
       lastName: user.lastName || undefined,
       isEmailVerified: user.isEmailVerified,
+      emailVerificationToken: user.emailVerificationToken || undefined,
+    };
+  }
+
+  /**
+   * Get user by email
+   */
+  static async getUserByEmail(email: string): Promise<AuthUser | null> {
+    const user = await prisma.user.findUnique({
+      where: { email: email.toLowerCase() },
+    });
+
+    if (!user) {
+      return null;
+    }
+
+    return {
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName || undefined,
+      lastName: user.lastName || undefined,
+      isEmailVerified: user.isEmailVerified,
+      emailVerificationToken: user.emailVerificationToken || undefined,
     };
   }
 }

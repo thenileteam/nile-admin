@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { AuthController } from "../controllers/auth.controller";
-import { validateBodyZod } from "../utils/validateRequest";
+import { validateRequest } from "../utils/validateRequest";
 import { authenticateToken } from "../middleware/auth.middleware";
 import {
   registerSchema,
@@ -177,7 +177,7 @@ const authController = new AuthController();
  *             schema:  
  *               $ref: '#/components/schemas/ApiResponse'
  */
-router.post("/register", validateBodyZod(registerSchema), authController.register);
+router.post("/register", validateRequest(registerSchema), authController.register);
 
 /**
  * @swagger
@@ -215,7 +215,7 @@ router.post("/register", validateBodyZod(registerSchema), authController.registe
  *             schema:
  *               $ref: '#/components/schemas/ApiResponse'
  */
-router.post("/login", validateBodyZod(loginSchema), authController.login);
+router.post("/login", validateRequest(loginSchema), authController.login);
 
 /**
  * @swagger
@@ -251,7 +251,7 @@ router.post("/login", validateBodyZod(loginSchema), authController.login);
  *             schema:
  *               $ref: '#/components/schemas/ApiResponse'
  */
-router.post("/change-password", authenticateToken, validateBodyZod(changePasswordSchema), authController.changePassword);
+router.post("/change-password", authenticateToken, validateRequest(changePasswordSchema), authController.changePassword);
 
 /**
  * @swagger
@@ -279,7 +279,7 @@ router.post("/change-password", authenticateToken, validateBodyZod(changePasswor
  *             schema:
  *               $ref: '#/components/schemas/ApiResponse'
  */
-router.post("/forgot-password", validateBodyZod(forgotPasswordSchema), authController.forgotPassword);
+router.post("/forgot-password", validateRequest(forgotPasswordSchema), authController.forgotPassword);
 
 /**
  * @swagger
@@ -307,7 +307,7 @@ router.post("/forgot-password", validateBodyZod(forgotPasswordSchema), authContr
  *             schema:
  *               $ref: '#/components/schemas/ApiResponse'
  */
-router.post("/reset-password", validateBodyZod(resetPasswordSchema), authController.resetPassword);
+router.post("/reset-password", validateRequest(resetPasswordSchema), authController.resetPassword);
 
 /**
  * @swagger
@@ -335,7 +335,7 @@ router.post("/reset-password", validateBodyZod(resetPasswordSchema), authControl
  *             schema:
  *               $ref: '#/components/schemas/ApiResponse'
  */
-router.post("/verify-email", validateBodyZod(verifyEmailSchema), authController.verifyEmail);
+router.post("/verify-email", validateRequest(verifyEmailSchema), authController.verifyEmail);
 
 /**
  * @swagger
@@ -363,7 +363,7 @@ router.post("/verify-email", validateBodyZod(verifyEmailSchema), authController.
  *             schema:
  *               $ref: '#/components/schemas/ApiResponse'
  */
-router.post("/resend-verification", validateBodyZod(resendVerificationSchema), authController.resendVerification);
+  router.post("/resend-verification", validateRequest(resendVerificationSchema), authController.resendVerification);
 
 /**
  * @swagger

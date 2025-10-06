@@ -1,27 +1,34 @@
+
+import { MailtrapTransport } from "mailtrap";
 import nodemailer from "nodemailer";
+
 
 export class EmailService {
   private transporter: nodemailer.Transporter;
+  private sender: string;
 
   constructor() {
-    this.transporter = nodemailer.createTransport({
-      host: process.env.MAILTRAP_HOST || "sandbox.smtp.mailtrap.io",
-      port: parseInt(process.env.MAILTRAP_PORT || "2525"),
-      auth: {
-        user: process.env.MAILTRAP_USERNAME || "",
-        pass: process.env.MAILTRAP_PASSWORD || "",
-      },
-    });
-  }
+    this.transporter = nodemailer.createTransport(
+      MailtrapTransport({
+        token: process.env.MAILTRAP_API_TOKEN!,
+      })
+    );
 
+    this.sender = `"Nile App Team" <${process.env.FROM_EMAIL!}>`;
+
+  }
   /**
    * Send email verification email
    */
   async sendEmailVerification(email: string, firstName: string | undefined, token: string): Promise<void> {
     const verificationUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/verify-email?token=${token}`;
-    
-    const mailOptions = {
-      from: process.env.FROM_EMAIL || "noreply@nile-admin.com",
+    const sender = {
+      address: "hello@nile.ng",
+      name: "Nile App Team",
+    };
+
+    const mailOptions: nodemailer.SendMailOptions = {
+      from: sender,
       to: email,
       subject: "Verify Your Email Address",
       html: `
@@ -55,9 +62,13 @@ export class EmailService {
    */
   async sendPasswordReset(email: string, firstName: string | undefined, token: string): Promise<void> {
     const resetUrl = `${process.env.FRONTEND_URL || "http://localhost:3000"}/reset-password?token=${token}`;
-    
-    const mailOptions = {
-      from: process.env.FROM_EMAIL || "noreply@nile-admin.com",
+    const sender = {
+      address: "hello@nile.ng",
+      name: "Nile App Team",
+    };
+
+    const mailOptions: nodemailer.SendMailOptions = {
+      from: sender,
       to: email,
       subject: "Reset Your Password",
       html: `
@@ -90,8 +101,13 @@ export class EmailService {
    * Send welcome email after successful registration
    */
   async sendWelcomeEmail(email: string, firstName: string | undefined): Promise<void> {
-    const mailOptions = {
-      from: process.env.FROM_EMAIL || "noreply@nile-admin.com",
+    const sender = {
+      address: "hello@nile.ng",
+      name: "Nile App Team",
+    };
+
+    const mailOptions: nodemailer.SendMailOptions = {
+      from: sender,
       to: email,
       subject: "Welcome to Nile Admin Service!",
       html: `
@@ -123,9 +139,14 @@ export class EmailService {
    * Send password change confirmation email
    */
   async sendPasswordChangeConfirmation(email: string, firstName: string | undefined): Promise<void> {
-    const mailOptions = {
-      from: process.env.FROM_EMAIL || "noreply@nile-admin.com",
-      to: email,
+    const sender = {
+      address: "hello@nile.ng",
+      name: "Nile App Team",
+    };
+
+    const mailOptions: nodemailer.SendMailOptions = {
+      from: sender,
+      to: email,  
       subject: "Password Changed Successfully",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">

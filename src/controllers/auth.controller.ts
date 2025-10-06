@@ -22,8 +22,9 @@ export class AuthController {
    * Register a new user
    */
   register = async (req: Request, res: Response): Promise<void> => {
+    const { email, password, firstName, lastName }: RegisterInput = req.body;
     try {
-      const { email, password, firstName, lastName }: RegisterInput = req.body;
+
 
       const { user, tokens } = await AuthService.register(email, password, firstName, lastName);
 
@@ -32,15 +33,14 @@ export class AuthController {
         await this.emailService.sendEmailVerification(
           user.email,
           user.firstName,
-          // We need to get the verification token from the database
-          // This is a simplified version - in production, you'd want to return the token from the service
-          "verification-token-placeholder"
+          user.emailVerificationToken as string
         );
       } catch (emailError) {
         console.error("Failed to send verification email:", emailError);
         // Don't fail registration if email fails
       }
-
+      res.cookie("accessToken", tokens.accessToken, { httpOnly: true, secure: process.env.NODE_ENV === "production", maxAge: 15 * 60 * 1000 });
+      res.cookie("refreshToken", tokens.refreshToken, { httpOnly: true, secure: process.env.NODE_ENV === "production", maxAge: 7 * 24 * 60 * 60 * 1000 });
       res.status(201).json({
         success: true,
         message: "User registered successfully. Please check your email for verification.",
@@ -55,15 +55,40 @@ export class AuthController {
           tokens,
         },
       });
-    } catch (error: any) {
-      console.error("Registration error:", error);
-      res.status(400).json({
-        success: false,
-        message: error.message || "Registration failed",
-        error: "REGISTRATION_ERROR",
-      });
+    } catch (error: any) { 
+      if (error.code === "P2002" || error.message === "User with this email already exists") {
+        // user already exists
+        const user = await AuthService.getUserByEmail(email); // ✅ FIXED
+
+        if (user) {
+          try {
+            if (user.emailVerificationToken) {
+              await this.emailService.sendEmailVerification(
+                user.email,
+                user.firstName,
+                user.emailVerificationToken
+              );
+            }
+          } catch (emailError) {
+            console.error("Failed to resend verification email:", emailError);
+          }
+
+          res.status(409).json({
+            success: false,
+            message: "User already exists. Verification email resent if needed.",
+            data: { user },
+          });
+        }
+      } else {
+        res.status(500).json({
+          success: false,
+          message: error.message || "Registration failed",
+          error: "REGISTRATION_ERROR",
+        });
+      }
     }
-  };
+  }
+
 
   /**
    * Login user
@@ -157,10 +182,10 @@ export class AuthController {
       // Send password reset email
       try {
         // Get user info for email
-        const user = await AuthService.getUserById(
+        const user = await AuthService.getUserByEmail(
           // We need to get user by email first to send the email
           // This is a simplified version
-          "user-id-placeholder"
+          email
         );
         if (user) {
           await this.emailService.sendPasswordReset(
@@ -245,9 +270,9 @@ export class AuthController {
 
       // Send verification email
       try {
-        const user = await AuthService.getUserById(
+        const user = await AuthService.getUserByEmail(
           // We need to get user by email first
-          "user-id-placeholder"
+          email
         );
         if (user) {
           await this.emailService.sendEmailVerification(

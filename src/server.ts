@@ -11,8 +11,21 @@ app.use(express.json());
 app.use("/api", OrderRouter);
 app.use("/api/auth", AuthRouter);
 
-// Swagger Docs
+
+
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
+
+
+
+// Not found route
+app.use("*", (req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found",
+    error: "ROUTE_NOT_FOUND",
+  });
+});
+
 
 app.listen(9000, () => {
   console.log("🚀 Server running at http://localhost:9000");
