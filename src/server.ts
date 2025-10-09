@@ -3,6 +3,7 @@ import swaggerUi from "swagger-ui-express";
 import { OrderRouter } from "./routes/order.routes";
 import { AuthRouter } from "./routes/auth.routes";
 import { openApiSpec } from "./docs/swagger";
+import { DashboardRouter } from "./routes/dashboard.route";
 
 const app = express();
 app.use(express.json());
@@ -10,6 +11,7 @@ app.use(express.json());
 // Routes
 app.use("/api", OrderRouter);
 app.use("/api/auth", AuthRouter);
+app.use("/api/dashboard", DashboardRouter);
 
 
 

@@ -6,7 +6,6 @@
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -15,17 +14,43 @@ datasource db {
 }
 
 model User {
-  id                String    @id @default(cuid())
-  email             String    @unique
-  password          String
-  firstName         String?
-  lastName          String?
-  isEmailVerified   Boolean   @default(false)
+  id                     String    @id @default(cuid())
+  email                  String    @unique
+  password               String
+  firstName              String?
+  lastName               String?
+  isEmailVerified        Boolean   @default(false)
   emailVerificationToken String?
-  passwordResetToken String?
-  passwordResetExpires DateTime?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  passwordResetToken     String?
+  passwordResetExpires   DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
 
   @@map("users")
+}
+
+model DashboardStat {
+  id         String   @id @default(cuid())
+  metricType String //"orders" , "revenue", "users", "products", "categories", "brands", "reviews"
+  year       Int
+  month      Int
+  week       Int
+  value      Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([metricType, year, month, week])
+  @@map("dashboard_stats")
+}
+
+model FailedOrderReason {
+  id        Int      @id @default(autoincrement())
+  reason    String
+  year      Int
+  month     Int
+  week      Int
+  value     Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@unique([reason, year, month, week])
 }
