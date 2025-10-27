@@ -4,12 +4,15 @@ import { OrderRouter } from "./routes/order.routes";
 import { AuthRouter } from "./routes/auth.routes";
 import { openApiSpec } from "./docs/swagger";
 import { DashboardRouter } from "./routes/dashboard.route";
+import { MerchantRouter } from "./routes/merchant.routes";
+import startListeners from "./rabbitMq/consumers";
 
 const app = express();
 app.use(express.json());
 
 // Routes
-app.use("/api", OrderRouter);
+app.use("/api/merchants", MerchantRouter);
+app.use("/api/orders", OrderRouter);
 app.use("/api/auth", AuthRouter);
 app.use("/api/dashboard", DashboardRouter);
 
@@ -33,3 +36,6 @@ app.listen(9000, () => {
   console.log("🚀 Server running at http://localhost:9000");
   console.log("📖 Swagger docs at http://localhost:9000/docs");
 });
+
+
+startListeners();
