@@ -1,3 +1,6 @@
+import dotenv from "dotenv";
+
+
 import express from "express";
 import swaggerUi from "swagger-ui-express";
 import { OrderRouter } from "./routes/order.routes";
@@ -7,6 +10,8 @@ import { DashboardRouter } from "./routes/dashboard.route";
 import { MerchantRouter } from "./routes/merchant.routes";
 import startListeners from "./rabbitMq/consumers";
 
+
+dotenv.config();
 const app = express();
 app.use(express.json());
 
