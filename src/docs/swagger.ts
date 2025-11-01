@@ -861,7 +861,7 @@ registry.registerPath({
 
 registry.registerPath({
   method: "get",
-  path: "/dashboard/trends",
+  path: "/dashboard/month-orders-trends",
   tags: ["Dashboard"],
   security: [{ bearerAuth: [] }],
   responses: {
