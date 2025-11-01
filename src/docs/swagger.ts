@@ -886,7 +886,7 @@ registry.registerPath({
 
 registry.registerPath({
   method: "get",
-  path: "/dashboard/failed-orders",
+  path: "/dashboard/failed-order-reasons",
   tags: ["Dashboard"],
   security: [{ bearerAuth: [] }],
   responses: {
@@ -956,7 +956,7 @@ registry.registerPath({
 
 registry.registerPath({
   method: "put",
-  path: "/dashboard/failed-orders",
+  path: "/dashboard/failed-order-reasons",
   tags: ["Dashboard"],
   security: [{ bearerAuth: [] }],
   request: {
