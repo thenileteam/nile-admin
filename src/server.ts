@@ -1,3 +1,4 @@
+import cors from "cors";
 import dotenv from "dotenv";
 
 
@@ -14,7 +15,43 @@ import startListeners from "./rabbitMq/consumers";
 dotenv.config();
 const app = express();
 app.use(express.json());
+ interface CorsOptions {
+   origin: (
+     origin: string | undefined,
+     callback: (err: Error | null, allow?: boolean) => void
+   ) => void;
+   credentials: boolean;
+ }
 
+ const corsOptions: CorsOptions = {
+   origin: function (
+     origin: string | undefined,
+     callback: (err: Error | null, allow?: boolean) => void
+   ): void {
+     const allowedOrigins: string[] = [
+       "http://localhost:5173",
+       "http://app.nile.ng",
+       "http://admin.nile.ng",
+       "http://store.nile.ng",
+       "http://cart.nile.ng",
+     "http://payment.nile.ng",
+     ];
+
+//     console.log("CORS request origin:", origin);
+
+     if (!origin || allowedOrigins.includes(origin)) {
+       console.log("✅ CORS allowed for:", origin);
+       callback(null, true);
+     } else {
+       console.log("❌ CORS denied for:", origin);
+       callback(new Error("Not allowed by CORS"));
+     }
+   },
+   credentials: true,
+ };
+
+ app.use(cors(corsOptions));
+ app.options("*", cors(corsOptions));
 // Routes
 app.use("/api/merchants", MerchantRouter);
 app.use("/api/orders", OrderRouter);
