@@ -96,10 +96,11 @@ class MerchantManagementService {
         "/all-stores",
         queryParams
       );
+      console.log("api response", response);
       const orders = await this.getAllOrders();
 
       const getStoreSales = (storeId: string): string => {
-        console.log("storeId", storeId);
+        
         const storeOrders = orders.filter(
           (order: any) =>
             order.storeId === storeId &&
