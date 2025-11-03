@@ -68,7 +68,7 @@ class OrderManagementService {
         createdAt: order.createdAt,
         updatedAt: order.updatedAt,
         products: order.items,
-        isSuccessful: order.status === 'SHIPPED' || order.status === 'DELIVERED'
+        isSuccessful: order.status === 'PENDING' || order.status === 'DELIVERED' || order.status === 'SHIPPED' || order.status === 'PROCESSING'
       }));
 
      
