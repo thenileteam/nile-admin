@@ -1,7 +1,10 @@
 import { ExternalApiClient } from "../utils/external-api-client";
 
 // External API Configuration
-const MERCHANT_API_BASE_URL = process.env.MERCHANT_API_BASE_URL || 'http://localhost:3004';
+const MERCHANT_API_BASE_URL =
+  process.env.MERCHANT_API_BASE_URL || "http://localhost:3004";
+const ORDERS_API_BASE_URL =
+  process.env.ORDERS_API_BASE_URL || "http://localhost:3003";
 const MERCHANT_API_KEY = process.env.MERCHANT_API_KEY;
 
 // Types for external API responses
@@ -31,6 +34,8 @@ interface StoreResponse {
   ownerId: string;
   storeUrl: string;
   createdAt: string;
+  totalSales?: string;
+  totalOrders?: string;
 }
 
 interface StoreStats {
@@ -46,17 +51,23 @@ interface StoreFilters {
   isActive?: boolean;
   limit?: number;
   offset?: number;
-  page?:number;
+  page?: number;
 }
 
 class MerchantManagementService {
   private apiClient: ExternalApiClient;
+  private orderApiClient: ExternalApiClient;
 
   constructor() {
     this.apiClient = new ExternalApiClient({
       baseURL: MERCHANT_API_BASE_URL,
-      apiKey: MERCHANT_API_KEY || '',
-      timeout: 10000
+      apiKey: MERCHANT_API_KEY || "",
+      timeout: 10000,
+    });
+    this.orderApiClient = new ExternalApiClient({
+      baseURL: ORDERS_API_BASE_URL,
+      apiKey: MERCHANT_API_KEY || "",
+      timeout: 10000,
     });
   }
 
@@ -74,13 +85,40 @@ class MerchantManagementService {
 
       if (filters?.name) queryParams.name = filters.name;
       if (filters?.email) queryParams.email = filters.email;
-      if (filters?.isActive !== undefined) queryParams.isActive = filters.isActive;
+      if (filters?.isActive !== undefined)
+        queryParams.isActive = filters.isActive;
       if (filters?.limit) queryParams.limit = filters.limit;
       if (filters?.offset) queryParams.offset = filters.offset;
       if (filters?.page) queryParams.page = filters.page;
 
       // Call external API
-      const response = await this.apiClient.get<StoreResponse[]>('/all-stores', queryParams);
+      const response = await this.apiClient.get<StoreResponse[]>(
+        "/all-stores",
+        queryParams
+      );
+      const orders = await this.getAllOrders();
+
+      const getStoreSales = (storeId: string): string => {
+        console.log("storeId", storeId);
+        const storeOrders = orders.filter(
+          (order: any) =>
+            order.storeId === storeId &&
+            order.paymentStatus === "PAID" 
+        );
+
+        const totalSales = storeOrders.reduce(
+          (sum: number, order: any) => sum + parseFloat(order.grandTotal),
+          0
+        );
+        return totalSales.toFixed(2);
+      };
+      const getStoreOrders = (storeId: string): string => {
+        
+        const storeOrders = orders.filter(
+          (order: any) => order.storeId === storeId
+        );
+        return storeOrders.length.toString();
+      }
       // console.log("response", response);
       // Transform merchants and apply old/new filtering
       let transformedStores = response.map((store: StoreResponse) => ({
@@ -109,12 +147,16 @@ class MerchantManagementService {
         ownerId: store.ownerId,
         storeUrl: store.storeUrl,
         createdAt: new Date(store.createdAt).toISOString(),
+        totalSales: getStoreSales(store.id),
+        totalOrders: getStoreOrders(store.id),
       }));
 
       // Apply old/new filter if specified
       if (filters?.isOld !== undefined) {
-        transformedStores = transformedStores.filter(store =>
-          store.createdAt > new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()
+        transformedStores = transformedStores.filter(
+          (store) =>
+            store.createdAt >
+            new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString()
         );
       }
 
@@ -124,11 +166,28 @@ class MerchantManagementService {
       return {
         stores: transformedStores,
         total: response.length,
-        stats
+        stats,
       };
     } catch (error) {
-      console.error('Error fetching stores:', error);
-      throw new Error('Failed to fetch stores');
+      console.error("Error fetching stores:", error);
+      throw new Error("Failed to fetch stores");
+    }
+  }
+  /**
+   * GET - Fetch all orders with optional filtering
+   */
+  async getAllOrders(): Promise<any> {
+    try {
+      // Build query parameters
+
+      // Call external API
+      const response = await this.orderApiClient.get<any[]>("/all-orders");
+      // console.log("response", response);
+
+      return response;
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      throw new Error("Failed to fetch orders");
     }
   }
 
@@ -137,12 +196,12 @@ class MerchantManagementService {
    */
   async getStoreStats(): Promise<StoreStats> {
     try {
-      const response = await this.apiClient.get<StoreStats>('/stores/stats');
+      const response = await this.apiClient.get<StoreStats>("/stores/stats");
 
       return response;
     } catch (error) {
-      console.error('Error fetching store stats:', error);
-      throw new Error('Failed to fetch store stats');
+      console.error("Error fetching store stats:", error);
+      throw new Error("Failed to fetch store stats");
     }
   }
 
@@ -151,7 +210,9 @@ class MerchantManagementService {
    */
   async getStoreById(storeId: string): Promise<any> {
     try {
-      const response = await this.apiClient.get<StoreResponse>(`/stores/${storeId}`);
+      const response = await this.apiClient.get<StoreResponse>(
+        `/stores/${storeId}`
+      );
 
       return {
         id: response.id,
@@ -181,12 +242,10 @@ class MerchantManagementService {
         createdAt: new Date(response.createdAt).toISOString(),
       };
     } catch (error) {
-      console.error('Error fetching store:', error);
-      throw new Error('Failed to fetch store');
+      console.error("Error fetching store:", error);
+      throw new Error("Failed to fetch store");
     }
   }
-
-
 
   /**
    * DELETE - Delete store
@@ -194,10 +253,10 @@ class MerchantManagementService {
   async deleteStore(storeId: string): Promise<any> {
     try {
       await this.apiClient.delete(`/stores/${storeId}`);
-      return { success: true, message: 'Store deleted successfully' };
+      return { success: true, message: "Store deleted successfully" };
     } catch (error) {
-      console.error('Error deleting store:', error);
-      throw new Error('Failed to delete store');
+      console.error("Error deleting store:", error);
+      throw new Error("Failed to delete store");
     }
   }
 
@@ -217,13 +276,13 @@ class MerchantManagementService {
    */
   private calculateStoreStats(stores: any[]): StoreStats {
     const totalStores = stores.length;
-    const oldStores = stores.filter(store => store.isOld).length;
+    const oldStores = stores.filter((store) => store.isOld).length;
     const newStores = totalStores - oldStores;
 
     return {
       totalStores: totalStores,
       oldStores: oldStores,
-      newStores: newStores
+      newStores: newStores,
     };
   }
 }

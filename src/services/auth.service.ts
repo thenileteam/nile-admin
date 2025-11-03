@@ -22,7 +22,7 @@ export interface AuthTokens {
 export class AuthService {
   private static readonly JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
   private static readonly JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || "your-refresh-secret-key";
-  private static readonly JWT_EXPIRES_IN = "15m";
+  private static readonly JWT_EXPIRES_IN = "60m";
   private static readonly JWT_REFRESH_EXPIRES_IN = "7d";
   private static readonly BCRYPT_ROUNDS = 12;
 

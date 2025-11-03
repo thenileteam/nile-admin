@@ -21,7 +21,7 @@ class MerchantManagementController {
       };
 
       const result = await merchantManagementService.getAllStores(filters);
-      
+    
       res.status(200).json({
         success: true,
         data: result.stores,
