@@ -32,6 +32,7 @@ app.use(express.json());
        "http://localhost:5173",
        "http://app.nile.ng",
        "http://admin.nile.ng",
+       "https://admin.nile.ng",
        "http://store.nile.ng",
        "http://cart.nile.ng",
      "http://payment.nile.ng",

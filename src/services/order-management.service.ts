@@ -1,27 +1,11 @@
+import { ExternalOrder } from "../schemas/order.schema";
 import { ExternalApiClient } from "../utils/external-api-client";
 
 // External API Configuration
-const ORDER_API_BASE_URL = process.env.ORDER_API_BASE_URL || 'https://api.order-service.com';
+const ORDER_API_BASE_URL = process.env.ORDERS_API_BASE_URL || 'http://localhost:3003';
 const ORDER_API_KEY = process.env.ORDER_API_KEY;
 
-// Types for external API responses
-interface ExternalOrder {
-  orderId: string;
-  merchantId: string;
-  merchantName: string;
-  merchantEmail: string;
-  customerEmail: string;
-  amount: number;
-  status: 'completed' | 'pending' | 'failed' | 'cancelled';
-  createdAt: string;
-  updatedAt: string;
-  products: Array<{
-    productId: string;
-    name: string;
-    quantity: number;
-    price: number;
-  }>;
-}
+
 
 interface OrderStats {
   totalOrders: number;
@@ -71,38 +55,23 @@ class OrderManagementService {
       if (filters?.offset) queryParams.offset = filters.offset;
 
       // Call external API
-      const response = await this.apiClient.get<{
-        orders: ExternalOrder[];
-        total: number;
-      }>('/orders', queryParams);
+      const response = await this.apiClient.get<
+         ExternalOrder[]>('/all-orders', queryParams);
 
       // Transform orders
-      let transformedOrders = response.orders.map(order => ({
-        id: order.orderId,
-        merchantId: order.merchantId,
-        merchantName: order.merchantName,
-        merchantEmail: order.merchantEmail,
+      let transformedOrders = response.map(order => ({
+        id: order.id,
+        merchantId: order.storeId,
         customerEmail: order.customerEmail,
-        amount: order.amount,
+        amount: order.grandTotal,
         status: order.status,
         createdAt: order.createdAt,
         updatedAt: order.updatedAt,
-        products: order.products,
-        isSuccessful: order.status === 'completed'
+        products: order.items,
+        isSuccessful: order.status === 'SHIPPED' || order.status === 'DELIVERED'
       }));
 
-      // Apply store name/email filtering if specified
-      if (filters?.storeName) {
-        transformedOrders = transformedOrders.filter(order => 
-          order.merchantName.toLowerCase().includes(filters.storeName!.toLowerCase())
-        );
-      }
-
-      if (filters?.storeEmail) {
-        transformedOrders = transformedOrders.filter(order => 
-          order.merchantEmail.toLowerCase().includes(filters.storeEmail!.toLowerCase())
-        );
-      }
+     
 
       // Calculate stats
       const stats = this.calculateOrderStats(transformedOrders);
@@ -127,7 +96,7 @@ class OrderManagementService {
       
       const orders = response.map(order => ({
         ...order,
-        isSuccessful: order.status === 'completed'
+        isSuccessful: order.status === 'DELIVERED' || order.status === 'SHIPPED'
       }));
 
       return this.calculateOrderStats(orders);
@@ -145,17 +114,15 @@ class OrderManagementService {
       const response = await this.apiClient.get<ExternalOrder>(`/orders/${orderId}`);
       
       return {
-        id: response.orderId,
-        merchantId: response.merchantId,
-        merchantName: response.merchantName,
-        merchantEmail: response.merchantEmail,
+        id: response.id,
+        merchantId: response.storeId,
         customerEmail: response.customerEmail,
-        amount: response.amount,
+        amount: response.grandTotal,
         status: response.status,
         createdAt: response.createdAt,
         updatedAt: response.updatedAt,
-        products: response.products,
-        isSuccessful: response.status === 'completed'
+        products: response.items,
+        isSuccessful: response.status === 'SHIPPED' || response.status === 'DELIVERED'
       };
     } catch (error) {
       console.error('Error fetching order:', error);
@@ -183,17 +150,15 @@ class OrderManagementService {
       const response = await this.apiClient.get<ExternalOrder[]>(`/merchants/${merchantId}/orders`, queryParams);
       
       const orders = response.map(order => ({
-        id: order.orderId,
-        merchantId: order.merchantId,
-        merchantName: order.merchantName,
-        merchantEmail: order.merchantEmail,
+        id: order.id,
+        merchantId: order.storeId,
         customerEmail: order.customerEmail,
-        amount: order.amount,
+        amount: order.grandTotal,
         status: order.status,
         createdAt: order.createdAt,
         updatedAt: order.updatedAt,
-        products: order.products,
-        isSuccessful: order.status === 'completed'
+        products: order.items,
+        isSuccessful: order.status === 'DELIVERED' || order.status === 'SHIPPED'
       }));
 
       const stats = this.calculateOrderStats(orders);
@@ -225,17 +190,17 @@ class OrderManagementService {
       const response = await this.apiClient.post<ExternalOrder>('/orders', orderData);
       
       return {
-        id: response.orderId,
-        merchantId: response.merchantId,
-        merchantName: response.merchantName,
-        merchantEmail: response.merchantEmail,
+    
+        id: response.id,
+        merchantId: response.storeId,
         customerEmail: response.customerEmail,
-        amount: response.amount,
+        amount: response.grandTotal,
         status: response.status,
         createdAt: response.createdAt,
         updatedAt: response.updatedAt,
-        products: response.products,
-        isSuccessful: response.status === 'completed'
+        products: response.items,
+        isSuccessful: response.status === 'DELIVERED' || response.status === 'SHIPPED'
+      
       };
     } catch (error) {
       console.error('Error creating order:', error);
@@ -251,17 +216,16 @@ class OrderManagementService {
       const response = await this.apiClient.put<ExternalOrder>(`/orders/${orderId}`, { status });
       
       return {
-        id: response.orderId,
-        merchantId: response.merchantId,
-        merchantName: response.merchantName,
-        merchantEmail: response.merchantEmail,
+          id: response.id,
+        merchantId: response.storeId,
         customerEmail: response.customerEmail,
-        amount: response.amount,
+        amount: response.grandTotal,
         status: response.status,
         createdAt: response.createdAt,
         updatedAt: response.updatedAt,
-        products: response.products,
-        isSuccessful: response.status === 'completed'
+        products: response.items,
+        isSuccessful: response.status === 'DELIVERED' || response.status === 'SHIPPED'
+      
       };
     } catch (error) {
       console.error('Error updating order status:', error);
