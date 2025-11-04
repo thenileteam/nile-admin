@@ -92,11 +92,11 @@ class OrderManagementService {
    */
   async getOrderStats(): Promise<OrderStats> {
     try {
-      const response = await this.apiClient.get<ExternalOrder[]>('/orders');
+      const response = await this.apiClient.get<ExternalOrder[]>('/all-orders');
       
       const orders = response.map(order => ({
         ...order,
-        isSuccessful: order.status === 'DELIVERED' || order.status === 'SHIPPED'
+        isSuccessful: order.status === 'DELIVERED' || order.status === 'SHIPPED' || order.status === 'PENDING'
       }));
 
       return this.calculateOrderStats(orders);
